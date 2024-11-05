@@ -85,4 +85,30 @@ public class Player {
         return 0;
     }
 
+    public boolean hasPlacedTanks() {
+        for(Card card: table.get(frontRowIdx))
+            if(card.getIsTank())
+                return true;
+        return false;
+    }
+
+    public int useHeroAbility(int affectedRowIdx) {
+        if(mana < hero.getMana())
+            return 1;
+        if(hero.getHasAttacked())
+            return 2;
+        switch (hero.getName()) {
+            case "Lord Royce", "Empress Thorina" -> {
+                if(affectedRowIdx == frontRowIdx || affectedRowIdx == backRowIdx)
+                    return 3;
+            }
+            case "General Kocioraw", "King Mudface" -> {
+                if(affectedRowIdx != frontRowIdx && affectedRowIdx != backRowIdx)
+                    return 4;
+            }
+        }
+        hero.useAbility(table.get(affectedRowIdx));
+        mana -= hero.getMana();
+        return 0;
+    }
 }

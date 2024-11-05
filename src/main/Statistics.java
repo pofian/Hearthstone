@@ -12,10 +12,33 @@ import utils.Player;
 import java.util.ArrayList;
 
 public class Statistics {
+    private int totalGamesPlayed;
+    int[] playerWins;
 
     private final ArrayNode output;
     public Statistics(ArrayNode output) {
         this.output = output;
+        playerWins = new int[2];
+    }
+
+    public void increaseTotalGamesPlayed() {totalGamesPlayed++;}
+    public void getTotalGamesPlayed() {
+        ObjectNode node = JsonNodeFactory.instance.objectNode();
+        node.put("command", "getTotalGamesPlayed");
+        node.put("output", totalGamesPlayed);
+        output.addPOJO(node);
+    }
+    public void getPlayerOneWins() {
+        ObjectNode node = JsonNodeFactory.instance.objectNode();
+        node.put("command", "getPlayerOneWins");
+        node.put("output", playerWins[0]);
+        output.addPOJO(node);
+    }
+    public void getPlayerTwoWins() {
+        ObjectNode node = JsonNodeFactory.instance.objectNode();
+        node.put("command", "getPlayerTwoWins");
+        node.put("output", playerWins[1]);
+        output.addPOJO(node);
     }
 
     public void getPlayerDeck(int idx, Player player) {
@@ -52,6 +75,20 @@ public class Statistics {
             tableNode.addPOJO(cardNode);
         }
         node.putPOJO("output", tableNode);
+        output.addPOJO(node);
+    }
+
+    public void getFrozenCardsOnTable(ArrayList<ArrayList<Card>> table) {
+        ObjectNode node = JsonNodeFactory.instance.objectNode();
+        node.put("command", "getFrozenCardsOnTable");
+
+        ArrayList<ObjectNode> cardNode = new ArrayList<>();
+        for(ArrayList<Card> tableRow : table)
+            for(Card card: tableRow)
+                if(card.getFrozen())
+                    cardNode.add(card.toObjectNode());
+
+        node.putPOJO("output", cardNode);
         output.addPOJO(node);
     }
 
@@ -123,14 +160,8 @@ public class Statistics {
             return;
         ObjectNode node = JsonNodeFactory.instance.objectNode();
         node.put("command", "cardUsesAttack");
-        ObjectNode cardAttackerNode = JsonNodeFactory.instance.objectNode();
-        cardAttackerNode.put("x", cordAttacker.getX());
-        cardAttackerNode.put("y", cordAttacker.getY());
-        ObjectNode cardAttackedNode = JsonNodeFactory.instance.objectNode();
-        cardAttackedNode.put("x", cordAttacked.getX());
-        cardAttackedNode.put("y", cordAttacked.getY());
-        node.set("cardAttacker", cardAttackerNode);
-        node.set("cardAttacked", cardAttackedNode);
+        node.putPOJO("cardAttacker", cordAttacker);
+        node.putPOJO("cardAttacked", cordAttacked);
 
         final String[] messages = {
                 "Attacked card does not belong to the enemy.",
@@ -148,15 +179,8 @@ public class Statistics {
             return;
         ObjectNode node = JsonNodeFactory.instance.objectNode();
         node.put("command", "cardUsesAbility");
-
-        ObjectNode cardAttackerNode = JsonNodeFactory.instance.objectNode();
-        cardAttackerNode.put("x", cordAttacker.getX());
-        cardAttackerNode.put("y", cordAttacker.getY());
-        ObjectNode cardAttackedNode = JsonNodeFactory.instance.objectNode();
-        cardAttackedNode.put("x", cordAttacked.getX());
-        cardAttackedNode.put("y", cordAttacked.getY());
-        node.set("cardAttacker", cardAttackerNode);
-        node.set("cardAttacked", cardAttackedNode);
+        node.putPOJO("cardAttacker", cordAttacker);
+        node.putPOJO("cardAttacked", cordAttacked);
 
         final String[] messages = {
                 "Attacker card is frozen.",
@@ -167,6 +191,48 @@ public class Statistics {
                 "Attacked card does not exist."
         };
         node.put("error", messages[errorCode - 1]);
+        output.addPOJO(node);
+    }
+
+    public void useAttackHero(Coordinates cordAttacker, int errorCode) {
+        if(errorCode == 0)
+            return;
+        ObjectNode node = JsonNodeFactory.instance.objectNode();
+        node.put("command", "useAttackHero");
+        node.putPOJO("cardAttacker", cordAttacker);
+
+        final String[] messages = {
+                "Attacker card is frozen.",
+                "Attacker card has already attacked this turn.",
+                "Attacked card is not of type 'Tank'.",
+                "Attacked card does not exist."
+        };
+        node.put("error", messages[errorCode - 1]);
+        output.addPOJO(node);
+    }
+
+    public void useHeroAbility(int affectedRow, int errorCode) {
+        if(errorCode == 0)
+            return;
+        ObjectNode node = JsonNodeFactory.instance.objectNode();
+        final String[] players = {"one", "two"};
+        node.put("command", "useHeroAbility");
+        node.put("affectedRow", affectedRow);
+        final String[] messages = {
+                "Not enough mana to use hero's ability.",
+                "Hero has already attacked this turn.",
+                "Selected row does not belong to the enemy.",
+                "Selected row does not belong to the current player."
+        };
+        node.put("error", messages[errorCode - 1]);
+        output.addPOJO(node);
+    }
+
+    public void gameEnded(int playerWhoWon) {
+        playerWins[playerWhoWon]++;
+        ObjectNode node = JsonNodeFactory.instance.objectNode();
+        final String[] players = {"one", "two"};
+        node.put("gameEnded", "Player " + players[playerWhoWon] + " killed the enemy hero.");
         output.addPOJO(node);
     }
 

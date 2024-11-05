@@ -42,6 +42,28 @@
     "y" : 0
   },
   "cardAttacked" : {
+    "x" : 2,
+    "y" : 1
+  },
+  "error" : "Attacked card is not of type 'Tank'."
+}, {
+  "command" : "cardUsesAbility",
+  "cardAttacker" : {
+    "x" : 1,
+    "y" : 2
+  },
+  "cardAttacked" : {
+    "x" : 2,
+    "y" : 0
+  },
+  "error" : "Attacker card has already attacked this turn."
+}, {
+  "command" : "cardUsesAbility",
+  "cardAttacker" : {
+    "x" : 1,
+    "y" : 0
+  },
+  "cardAttacked" : {
     "x" : 0,
     "y" : 0
   },
@@ -84,7 +106,7 @@
   } ], [ {
     "mana" : 4,
     "attackDamage" : 5,
-    "health" : 8,
+    "health" : 5,
     "description" : "Standard card: When he is near, close your eyes. They betray your mind.",
     "colors" : [ "Yellow", "Orange", "Red" ],
     "name" : "Miraj"
@@ -112,7 +134,7 @@
   }, {
     "mana" : 5,
     "attackDamage" : 5,
-    "health" : 5,
+    "health" : 8,
     "description" : "Standard card: When he is near, close your eyes. They betray your mind.",
     "colors" : [ "Red", "Black" ],
     "name" : "Miraj"

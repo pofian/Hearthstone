@@ -14,11 +14,11 @@ public class Card {
     private int attackDamage;
     private int health;
     private String description;
-    private int type;
-
     private ArrayList<String> colors;
     private String name;
-    private boolean frozen, hasAttacked;
+
+    private boolean frozen, hasAttacked, isTank;
+    private int type;
 
     public Card() {}
     public Card(CardInput card) {
@@ -28,8 +28,13 @@ public class Card {
         description = card.getDescription();
         colors = card.getColors();
         name = card.getName();
+        frozen = false;
         hasAttacked = false;
         setType();
+        switch (name) {
+            case "Goliath", "Warden" -> isTank = true;
+            default -> isTank = false;
+        }
     }
     public Card(Card card) {
         this.mana = card.getMana();
@@ -70,11 +75,15 @@ public class Card {
         if(this.attackDamage < 0)
             this.attackDamage = 0;
     }
+    public void addAttackDamage(int attackDamage) {
+        this.attackDamage += attackDamage;
+    }
 
     public void setFrozen(boolean frozen) {this.frozen = frozen;}
     public boolean getFrozen() {return frozen;}
     public void setHasAttacked(boolean hasAttacked) {this.hasAttacked = hasAttacked;}
     public boolean getHasAttacked() {return hasAttacked;}
+    public boolean getIsTank() {return isTank;}
 
     public void swapHealth(Card card) {
         int aux = health;
@@ -104,7 +113,7 @@ public class Card {
             return 2;
         if(frozen)
             return 3;
-        if(opponentHasTanks && attacked.getType() == 0)
+        if(opponentHasTanks && !attacked.getIsTank())
             return 4;
 
         hasAttacked = true;
@@ -125,13 +134,30 @@ public class Card {
         }
         if(samePlayer)
             return 4;
-        if(opponentHasTanks && attacked.getType() == 0)
-            return 5;
+
+       if(opponentHasTanks && !attacked.getIsTank())
+           return 5;
+
         switch(name) {
             case "The Ripper" -> attacked.subtractAttackDamage(2);
             case "Miraj" -> swapHealth(attacked);
             case "The Cursed One" -> attacked.swapHealthAndAttackDamage();
         }
+
+        hasAttacked = true;
+        return 0;
+    }
+
+    public int attackHero(Card opponentHero, boolean opponentHasTanks) {
+        if(frozen)
+            return 1;
+        if(hasAttacked)
+            return 2;
+        if(opponentHasTanks)
+            return 3;
+
+        hasAttacked = true;
+        opponentHero.subtractHealth(attackDamage);
         return 0;
     }
 
