@@ -1,20 +1,20 @@
 package utils;
 
+import fileio.CardInput;
 import java.util.ArrayList;
-import java.util.Arrays;
 
-public class Player {
-    private Deck deck;
-    private ArrayList<Card> hand;
-    private Hero hero;
+public final class Player {
+    private final ArrayList<Card> hand, deck;
+    private final Hero hero;
     private int mana;
-    private boolean hasFinishedTurn;
-    private int frontRowIdx, backRowIdx;
+    private final int frontRowIdx, backRowIdx;
     private final ArrayList<ArrayList<Card>> table;
 
-    public Player (Deck deck, Hero hero, int frontRowIdx, int backRowIdx, ArrayList<ArrayList<Card>> table) {
-        this.deck = deck;
+    public Player(final ArrayList<CardInput> deck, final Hero hero, final int frontRowIdx,
+                  final int backRowIdx, final ArrayList<ArrayList<Card>> table) {
         hand = new ArrayList<>();
+        this.deck = createDeck(deck);
+        createDeck(deck);
         this.hero = hero;
         mana = 0;
         this.frontRowIdx = frontRowIdx;
@@ -22,16 +22,25 @@ public class Player {
         this.table = table;
     }
 
+    private ArrayList<Card> createDeck(final ArrayList<CardInput> deck) {
+        ArrayList<Card> newDeck = new ArrayList<>();
+        for (CardInput card : deck) {
+            newDeck.add(new Card(card));
+        }
+        return newDeck;
+    }
+
     public void drawCard() {
-        if(!deck.getCards().isEmpty())
-            hand.add(deck.getCards().remove(0));
+        if (!deck.isEmpty()) {
+            hand.add(deck.remove(0));
+        }
     }
 
     public ArrayList<Card> getHand() {
         return hand;
     }
 
-    public Deck getDeck() {
+    public ArrayList<Card> getDeck() {
         return deck;
     }
 
@@ -39,24 +48,12 @@ public class Player {
         return hero;
     }
 
-    public void addMana(int mana) {
+    public void addMana(final int mana) {
         this.mana += mana;
-    }
-
-    public void subMana(int mana) {
-        this.mana -= mana;
     }
 
     public int getMana() {
         return mana;
-    }
-
-    public boolean isHasFinishedTurn() {
-        return hasFinishedTurn;
-    }
-
-    public void setHasFinishedTurn(boolean hasFinishedTurn) {
-        this.hasFinishedTurn = hasFinishedTurn;
     }
 
     public int getBackRowIdx() {
@@ -67,44 +64,48 @@ public class Player {
         return frontRowIdx;
     }
 
-    public int placeCard(int handIdx) {
-//        if(handIdx >= hand.size())
-//            return 3;
-
+    public int placeCard(final int handIdx) {
         Card card = hand.get(handIdx);
-        if(mana < card.getMana())
-            return 1;
+        if (mana < card.getMana()) {
+            return Constants.NOT_ENOUGH_MANA_CARD;
+        }
         int type = card.getType();
-        ArrayList<Card> placeRow = table.get(frontRowIdx * type + backRowIdx * (1-type));
-        if(placeRow.size() >= 5)
-            return 2;
+        ArrayList<Card> placeRow = table.get(frontRowIdx * type + backRowIdx * (1 - type));
+        if (placeRow.size() >= Constants.COLUMN_COUNT) {
+            return Constants.ROW_FULL;
+        }
 
         mana -= card.getMana();
         placeRow.add(hand.remove(handIdx));
-
         return 0;
     }
 
     public boolean hasPlacedTanks() {
-        for(Card card: table.get(frontRowIdx))
-            if(card.getIsTank())
+        for (Card card : table.get(frontRowIdx)) {
+            if (card.getIsTank()) {
                 return true;
+            }
+        }
         return false;
     }
 
-    public int useHeroAbility(int affectedRowIdx) {
-        if(mana < hero.getMana())
-            return 1;
-        if(hero.getHasAttacked())
-            return 2;
+    public int useHeroAbility(final int affectedRowIdx) {
+        if (mana < hero.getMana()) {
+            return Constants.NOT_ENOUGH_MANA_ABILITY;
+        }
+        if (hero.getHasAttacked()) {
+            return Constants.HERO_HAS_ATTACKED;
+        }
         switch (hero.getName()) {
             case "Lord Royce", "Empress Thorina" -> {
-                if(affectedRowIdx == frontRowIdx || affectedRowIdx == backRowIdx)
-                    return 3;
+                if (affectedRowIdx == frontRowIdx || affectedRowIdx == backRowIdx) {
+                    return Constants.ROW_NOT_ENEMY;
+                }
             }
             case "General Kocioraw", "King Mudface" -> {
-                if(affectedRowIdx != frontRowIdx && affectedRowIdx != backRowIdx)
-                    return 4;
+                if (affectedRowIdx != frontRowIdx && affectedRowIdx != backRowIdx) {
+                    return Constants.ROW_NOT_PLAYER;
+                }
             }
         }
         hero.useAbility(table.get(affectedRowIdx));

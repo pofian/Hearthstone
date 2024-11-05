@@ -11,29 +11,35 @@ import utils.Player;
 
 import java.util.ArrayList;
 
-public class Statistics {
+public final class Statistics {
     private int totalGamesPlayed;
     int[] playerWins;
 
     private final ArrayNode output;
+
     public Statistics(ArrayNode output) {
         this.output = output;
         playerWins = new int[2];
     }
 
-    public void increaseTotalGamesPlayed() {totalGamesPlayed++;}
+    public void increaseTotalGamesPlayed() {
+        totalGamesPlayed++;
+    }
+
     public void getTotalGamesPlayed() {
         ObjectNode node = JsonNodeFactory.instance.objectNode();
         node.put("command", "getTotalGamesPlayed");
         node.put("output", totalGamesPlayed);
         output.addPOJO(node);
     }
+
     public void getPlayerOneWins() {
         ObjectNode node = JsonNodeFactory.instance.objectNode();
         node.put("command", "getPlayerOneWins");
         node.put("output", playerWins[0]);
         output.addPOJO(node);
     }
+
     public void getPlayerTwoWins() {
         ObjectNode node = JsonNodeFactory.instance.objectNode();
         node.put("command", "getPlayerTwoWins");
@@ -46,7 +52,7 @@ public class Statistics {
         node.put("command", "getPlayerDeck");
         node.put("playerIdx", idx);
         ArrayList<ObjectNode> cardList = new ArrayList<>();
-        for(Card card: player.getDeck().getCards())
+        for (Card card : player.getDeck())
             cardList.add(card.toObjectNode());
         node.putPOJO("output", cardList);
         output.addPOJO(node);
@@ -57,7 +63,7 @@ public class Statistics {
         node.put("command", "getCardsInHand");
         node.put("playerIdx", idx);
         ArrayList<ObjectNode> cardList = new ArrayList<>();
-        for(Card card: player.getHand())
+        for (Card card : player.getHand())
             cardList.add(card.toObjectNode());
         node.putPOJO("output", cardList);
         output.addPOJO(node);
@@ -68,9 +74,9 @@ public class Statistics {
         node.put("command", "getCardsOnTable");
 
         ArrayNode tableNode = new ArrayNode(JsonNodeFactory.instance);
-        for(ArrayList<Card> tableRow : table) {
+        for (ArrayList<Card> tableRow : table) {
             ArrayList<ObjectNode> cardNode = new ArrayList<>();
-            for(Card card: tableRow)
+            for (Card card : tableRow)
                 cardNode.add(card.toObjectNode());
             tableNode.addPOJO(cardNode);
         }
@@ -83,9 +89,9 @@ public class Statistics {
         node.put("command", "getFrozenCardsOnTable");
 
         ArrayList<ObjectNode> cardNode = new ArrayList<>();
-        for(ArrayList<Card> tableRow : table)
-            for(Card card: tableRow)
-                if(card.getFrozen())
+        for (ArrayList<Card> tableRow : table)
+            for (Card card : tableRow)
+                if (card.getFrozen())
                     cardNode.add(card.toObjectNode());
 
         node.putPOJO("output", cardNode);
@@ -128,7 +134,7 @@ public class Statistics {
     }
 
     public void placeCard(int handIdx, int errCode) {
-        if(errCode == 0)
+        if (errCode == 0)
             return;
         final String[] messages = {
                 "Not enough mana to place card on table.",
@@ -148,7 +154,7 @@ public class Statistics {
         node.put("y", y);
 
         ArrayList<Card> cards = table.get(x);
-        if(y < 0 || y >= cards.size())
+        if (y < 0 || y >= cards.size())
             node.put("output", "No card available at that position.");
         else
             node.put("output", cards.get(y).toObjectNode());
@@ -156,7 +162,7 @@ public class Statistics {
     }
 
     public void cardUsesAttack(Coordinates cordAttacker, Coordinates cordAttacked, int errCode) {
-        if(errCode == 0)
+        if (errCode == 0)
             return;
         ObjectNode node = JsonNodeFactory.instance.objectNode();
         node.put("command", "cardUsesAttack");
@@ -175,7 +181,7 @@ public class Statistics {
     }
 
     public void cardUsesAbility(Coordinates cordAttacker, Coordinates cordAttacked, int errorCode) {
-        if(errorCode == 0)
+        if (errorCode == 0)
             return;
         ObjectNode node = JsonNodeFactory.instance.objectNode();
         node.put("command", "cardUsesAbility");
@@ -195,7 +201,7 @@ public class Statistics {
     }
 
     public void useAttackHero(Coordinates cordAttacker, int errorCode) {
-        if(errorCode == 0)
+        if (errorCode == 0)
             return;
         ObjectNode node = JsonNodeFactory.instance.objectNode();
         node.put("command", "useAttackHero");
@@ -212,7 +218,7 @@ public class Statistics {
     }
 
     public void useHeroAbility(int affectedRow, int errorCode) {
-        if(errorCode == 0)
+        if (errorCode == 0)
             return;
         ObjectNode node = JsonNodeFactory.instance.objectNode();
         final String[] players = {"one", "two"};

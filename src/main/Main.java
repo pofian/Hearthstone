@@ -30,6 +30,7 @@ public final class Main {
     /**
      * DO NOT MODIFY MAIN METHOD
      * Call the checker
+     *
      * @param args from command line
      * @throws IOException in case of exceptions to reading / writing
      */
@@ -72,11 +73,12 @@ public final class Main {
         ArrayNode output = objectMapper.createArrayNode();
 
         Statistics statistics = new Statistics(output);
-        for(GameInput gameInput: inputData.getGames()) {
+        for (GameInput gameInput : inputData.getGames()) {
             statistics.increaseTotalGamesPlayed();
             Game game = new Game(inputData, gameInput, statistics);
-            for(ActionsInput action : gameInput.getActions())
+            for (ActionsInput action : gameInput.getActions()) {
                 game.runGame(action);
+            }
         }
 
         ObjectWriter objectWriter = objectMapper.writerWithDefaultPrettyPrinter();
