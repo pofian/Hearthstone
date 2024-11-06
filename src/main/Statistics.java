@@ -226,7 +226,6 @@ public final class Statistics {
             return;
         }
         ObjectNode node = JsonNodeFactory.instance.objectNode();
-        final String[] players = {"one", "two"};
         node.put("command", "useHeroAbility");
         node.put("affectedRow", affectedRow);
         final String[] messages = {

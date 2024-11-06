@@ -7,8 +7,7 @@ public final class Hero extends Card {
 
     public Hero(final CardInput card) {
         super(card);
-        int initialHealth = Constants.HERO_INITIAL_HEALTH;
-        setHealth(initialHealth);
+        setHealth(Constants.HERO_INITIAL_HEALTH);
     }
 
     /** */
