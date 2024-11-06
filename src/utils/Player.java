@@ -2,6 +2,8 @@ package utils;
 
 import fileio.CardInput;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Random;
 
 public final class Player {
     private final ArrayList<Card> hand, deck;
@@ -11,10 +13,10 @@ public final class Player {
     private final ArrayList<ArrayList<Card>> table;
 
     public Player(final ArrayList<CardInput> deck, final Hero hero, final int frontRowIdx,
-                  final int backRowIdx, final ArrayList<ArrayList<Card>> table) {
+                  final int backRowIdx, final ArrayList<ArrayList<Card>> table, final int seed) {
         hand = new ArrayList<>();
         this.deck = createDeck(deck);
-        createDeck(deck);
+        Collections.shuffle(this.deck, new Random(seed));
         this.hero = hero;
         mana = 0;
         this.frontRowIdx = frontRowIdx;
@@ -22,14 +24,15 @@ public final class Player {
         this.table = table;
     }
 
-    private ArrayList<Card> createDeck(final ArrayList<CardInput> deck) {
+    private ArrayList<Card> createDeck(final ArrayList<CardInput> deckInput) {
         ArrayList<Card> newDeck = new ArrayList<>();
-        for (CardInput card : deck) {
+        for (CardInput card : deckInput) {
             newDeck.add(new Card(card));
         }
         return newDeck;
     }
 
+    /** */
     public void drawCard() {
         if (!deck.isEmpty()) {
             hand.add(deck.remove(0));
@@ -48,8 +51,9 @@ public final class Player {
         return hero;
     }
 
-    public void addMana(final int mana) {
-        this.mana += mana;
+    /** */
+    public void addMana(final int manaAdded) {
+        mana += manaAdded;
     }
 
     public int getMana() {
@@ -64,6 +68,7 @@ public final class Player {
         return frontRowIdx;
     }
 
+    /** */
     public int placeCard(final int handIdx) {
         Card card = hand.get(handIdx);
         if (mana < card.getMana()) {
@@ -80,6 +85,7 @@ public final class Player {
         return 0;
     }
 
+    /** */
     public boolean hasPlacedTanks() {
         for (Card card : table.get(frontRowIdx)) {
             if (card.getIsTank()) {
@@ -89,6 +95,7 @@ public final class Player {
         return false;
     }
 
+    /** */
     public int useHeroAbility(final int affectedRowIdx) {
         if (mana < hero.getMana()) {
             return Constants.NOT_ENOUGH_MANA_ABILITY;
@@ -107,6 +114,7 @@ public final class Player {
                     return Constants.ROW_NOT_PLAYER;
                 }
             }
+            default -> System.out.println("Hero does not have an ability");
         }
         hero.useAbility(table.get(affectedRowIdx));
         mana -= hero.getMana();

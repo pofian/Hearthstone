@@ -1,19 +1,21 @@
 package main;
 
-import fileio.*;
+import fileio.ActionsInput;
+import fileio.CardInput;
+import fileio.Input;
+import fileio.GameInput;
 
-import java.util.Collections;
 import java.util.ArrayList;
-import java.util.Random;
-
-import utils.*;
-
+import utils.Player;
+import utils.Card;
+import utils.Hero;
+import utils.Constants;
 import static java.lang.Math.min;
 
 public final class Game {
-    final private ArrayList<Player> players;
-    final private Statistics statistics;
-    final private ArrayList<ArrayList<Card>> table;
+    private final ArrayList<Player> players;
+    private final Statistics statistics;
+    private final ArrayList<ArrayList<Card>> table;
     private final int startingPlayer;
     private int playerWhoHasTurn, currentRound;
 
@@ -29,42 +31,42 @@ public final class Game {
             table.add(new ArrayList<>());
         }
 
-        players = new ArrayList<>(2);
-        players.add(new Player(deckPlayerOne,
-                new Hero(gameInput.getStartGame().getPlayerOneHero()), 2, 3, table));
-        players.add(new Player(deckPlayerTwo,
-                new Hero(gameInput.getStartGame().getPlayerTwoHero()), 1, 0, table));
-
         int seed = gameInput.getStartGame().getShuffleSeed();
-        Collections.shuffle(players.get(0).getDeck(), new Random(seed));
-        Collections.shuffle(players.get(1).getDeck(), new Random(seed));
+        players = new ArrayList<>(2);
+        players.add(new Player(deckPlayerOne, new Hero(gameInput.getStartGame().getPlayerOneHero()),
+                Constants.PLAYER_ONE_FRONT_ROW, Constants.PLAYER_ONE_BACK_ROW, table, seed));
+        players.add(new Player(deckPlayerTwo, new Hero(gameInput.getStartGame().getPlayerTwoHero()),
+                Constants.PLAYER_TWO_FRONT_ROW, Constants.PLAYER_TWO_BACK_ROW, table, seed));
 
         startingPlayer = gameInput.getStartGame().getStartingPlayer() - 1;
         currentRound = 0;
         newRound();
     }
 
+    /**
+     *
+     */
     public void runGame(final ActionsInput action) {
         switch (action.getCommand()) {
             case "getTotalGamesPlayed" -> statistics.getTotalGamesPlayed();
             case "getPlayerOneWins" -> statistics.getPlayerOneWins();
             case "getPlayerTwoWins" -> statistics.getPlayerTwoWins();
             case "getPlayerDeck" -> {
-                int idx = action.getPlayerIdx();
-                statistics.getPlayerDeck(idx, players.get(idx - 1));
+                int playerIdx = action.getPlayerIdx();
+                statistics.getPlayerDeck(playerIdx, players.get(playerIdx - 1));
             }
             case "getPlayerMana" -> {
-                int idx = action.getPlayerIdx();
-                statistics.getPlayerMana(idx, players.get(idx - 1));
+                int playerIdx = action.getPlayerIdx();
+                statistics.getPlayerMana(playerIdx, players.get(playerIdx - 1));
             }
             case "getCardsOnTable" -> statistics.getCardsOnTable(table);
             case "getCardsInHand" -> {
-                int idx = action.getPlayerIdx();
-                statistics.getCardsInHand(idx, players.get(idx - 1));
+                int playerIdx = action.getPlayerIdx();
+                statistics.getCardsInHand(playerIdx, players.get(playerIdx - 1));
             }
             case "getPlayerHero" -> {
-                int idx = action.getPlayerIdx();
-                statistics.getPlayerHero(idx, players.get(idx - 1).getHero());
+                int playerIdx = action.getPlayerIdx();
+                statistics.getPlayerHero(playerIdx, players.get(playerIdx - 1).getHero());
             }
             case "getPlayerTurn" -> statistics.getPlayerTurn(playerWhoHasTurn + 1);
             case "getCardAtPosition" -> statistics.getCardAtPosition(action.getX(),
@@ -87,14 +89,13 @@ public final class Game {
                 }
             }
             case "placeCard" -> {
-                int idx = action.getHandIdx();
-                Player player = players.get(playerWhoHasTurn);
-                statistics.placeCard(idx, player.placeCard(idx));
+                int playerIdx = action.getHandIdx();
+                statistics.placeCard(playerIdx, players.get(playerWhoHasTurn).placeCard(playerIdx));
             }
             case "cardUsesAttack" -> {
                 int errorCode;
                 if (action.getCardAttacker().getX() / 2 == action.getCardAttacked().getX() / 2) {
-                    errorCode = 1;
+                    errorCode = Constants.CARD_NOT_OPPONENT;
                 } else {
                     Card attacker = table.get(action.getCardAttacker().getX()).
                             get(action.getCardAttacker().getY());
@@ -143,6 +144,7 @@ public final class Game {
                 statistics.useHeroAbility(affectedRow,
                         players.get(playerWhoHasTurn).useHeroAbility(affectedRow));
             }
+            default -> System.out.println("Unrecognised command");
         }
     }
 

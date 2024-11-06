@@ -11,6 +11,7 @@ public final class Hero extends Card {
         setHealth(initialHealth);
     }
 
+    /** */
     public void useAbility(final ArrayList<Card> cardsAffected) {
         setHasAttacked(true);
         switch (getName()) {
@@ -40,6 +41,7 @@ public final class Hero extends Card {
                     card.addAttackDamage(1);
                 }
             }
+            default -> System.out.println("Hero does not have an ability");
         }
     }
 }

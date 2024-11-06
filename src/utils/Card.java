@@ -9,13 +9,12 @@ import java.util.Arrays;
 import java.util.Objects;
 
 public class Card {
-    private final int mana;
+    private final int mana, type;
     private int attackDamage, health;
     private final String description, name;
     private final ArrayList<String> colors;
-
-    private boolean frozen, hasAttacked, isTank;
-    private int type;
+    private boolean frozen, hasAttacked;
+    private final boolean isTank;
 
     public Card(final CardInput card) {
         mana = card.getMana();
@@ -26,121 +25,124 @@ public class Card {
         name = card.getName();
         frozen = false;
         hasAttacked = false;
-        setType();
-        switch (name) {
-            case "Goliath", "Warden" -> isTank = true;
-            default -> isTank = false;
-        }
+        type = setType();
+        isTank = setIsTank();
     }
 
-    public Card(final Card card) {
-        this.mana = card.getMana();
-        this.description = card.getDescription();
-        this.colors = new ArrayList<String>(card.getColors());
-        this.name = card.getName();
-    }
-
-    public int getMana() {
+    public final int getMana() {
         return mana;
     }
 
-    public String getDescription() {
+    public final String getDescription() {
         return description;
     }
 
-    public ArrayList<String> getColors() {
+    public final ArrayList<String> getColors() {
         return colors;
     }
 
-    public String getName() {
+    public final String getName() {
         return name;
     }
 
-    public int getAttackDamage() {
+    public final int getAttackDamage() {
         return attackDamage;
     }
 
-    public int getHealth() {
+    public final int getHealth() {
         return health;
     }
 
-    public void setHealth(final int health) {
+    public final void setHealth(final int health) {
         this.health = health;
     }
 
-    public void addHealth(final int health) {
-        this.health += health;
+    /** */
+    public final void addHealth(final int healthAdded) {
+        health += healthAdded;
     }
 
-    public void subtractHealth(final int health) {
-        this.health -= health;
+    /** */
+    public final void subtractHealth(final int healthSubtracted) {
+        health -= healthSubtracted;
     }
 
-    public void subtractAttackDamage(final int attackDamage) {
-        this.attackDamage -= attackDamage;
-        if (this.attackDamage < 0) {
-            this.attackDamage = 0;
+    /** */
+    public final void subtractAttackDamage(final int attackDamageSubtracted) {
+        attackDamage -= attackDamageSubtracted;
+        if (attackDamage < 0) {
+            attackDamage = 0;
         }
     }
 
-    public void addAttackDamage(final int attackDamage) {
-        this.attackDamage += attackDamage;
+    /** */
+    public final void addAttackDamage(final int attackDamageAdded) {
+        attackDamage += attackDamageAdded;
     }
 
-    public void setFrozen(final boolean frozen) {
+    public final void setFrozen(final boolean frozen) {
         this.frozen = frozen;
     }
 
-    public boolean getFrozen() {
+    public final boolean getFrozen() {
         return frozen;
     }
 
-    public void setHasAttacked(final boolean hasAttacked) {
+    public final void setHasAttacked(final boolean hasAttacked) {
         this.hasAttacked = hasAttacked;
     }
 
-    public boolean getHasAttacked() {
+    public final boolean getHasAttacked() {
         return hasAttacked;
     }
 
-    public boolean getIsTank() {
+    /** */
+    public final boolean setIsTank() {
+        return (Objects.equals(name, "Goliath") || Objects.equals(name, "Warden"));
+    }
+
+    public final boolean getIsTank() {
         return isTank;
     }
 
-    public int getType() {
+    public final int getType() {
         return type;
     }
 
-    public void swapHealth(final Card card) {
+    /** */
+    public final void swapHealth(final Card card) {
         int aux = health;
         health = card.getHealth();
         card.setHealth(aux);
     }
 
-    public void swapHealthAndAttackDamage() {
+    /** */
+    public final void swapHealthAndAttackDamage() {
         int aux = health;
         health = attackDamage;
         attackDamage = aux;
     }
 
-    public void setType() {
+    /** */
+    private int setType() {
         final String[] backRowMinions = {"Sentinel", "Berserker", "The Cursed One", "Disciple"};
         if (Arrays.asList(backRowMinions).contains(name)) {
-            type = 0;
+            return 0;
         } else {
-            type = 1;
+            return 1;
         }
     }
 
-    public int attack(final Card attacked, final boolean opponentHasTanks) {
+    /** */
+    public final int attack(final Card attacked, final boolean opponentHasTanks) {
         if (hasAttacked) {
-            return 2;
+            return Constants.CARD_HAS_ATTACKED;
         }
         if (frozen) {
-            return 3;
+            return Constants.CARD_FROZEN;
         }
         if (opponentHasTanks && !attacked.getIsTank()) {
-            return 4;
+            return Constants.NOT_TANK;
         }
 
         hasAttacked = true;
@@ -148,7 +150,9 @@ public class Card {
         return 0;
     }
 
-    public int action(final Card attacked, final boolean samePlayer, final boolean opponentHasTanks) {
+    /** */
+    public final int action(final Card attacked, final boolean samePlayer,
+                            final boolean opponentHasTanks) {
         if (frozen) {
             return Constants.CARD_FROZEN;
         }
@@ -157,30 +161,32 @@ public class Card {
         }
         if (Objects.equals(name, "Disciple")) {
             if (!samePlayer) {
-                return 3;
+                return Constants.CARD_NOT_PLAYER;
             }
             attacked.addHealth(2);
             return 0;
         }
         if (samePlayer) {
-            return 4;
+            return Constants.CARD_NOT_OPPONENT;
         }
 
         if (opponentHasTanks && !attacked.getIsTank()) {
-            return 5;
+            return Constants.NOT_TANK;
         }
 
         switch (name) {
             case "The Ripper" -> attacked.subtractAttackDamage(2);
             case "Miraj" -> swapHealth(attacked);
             case "The Cursed One" -> attacked.swapHealthAndAttackDamage();
+            default -> System.out.println("Card does not have an action");
         }
 
         hasAttacked = true;
         return 0;
     }
 
-    public int attackHero(final Card opponentHero, final boolean opponentHasTanks) {
+    /** */
+    public final int attackHero(final Card opponentHero, final boolean opponentHasTanks) {
         if (frozen) {
             return Constants.CARD_FROZEN;
         }
@@ -196,6 +202,7 @@ public class Card {
         return 0;
     }
 
+    /** */
     public ObjectNode toObjectNode() {
         ObjectNode node = JsonNodeFactory.instance.objectNode();
         node.put("mana", mana);
