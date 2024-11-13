@@ -97,7 +97,7 @@ public class Card {
     }
 
     /** */
-    public final boolean setIsTank() {
+    private boolean setIsTank() {
         return (Objects.equals(name, "Goliath") || Objects.equals(name, "Warden"));
     }
 
