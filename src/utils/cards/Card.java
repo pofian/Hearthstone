@@ -1,20 +1,20 @@
-package utils;
+package utils.cards;
 
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import fileio.CardInput;
+import utils.Constants;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Objects;
 
 public class Card {
-    private final int mana, type;
+    private final int mana;
     private int attackDamage, health;
     private final String description, name;
     private final ArrayList<String> colors;
     private boolean frozen, hasAttacked;
-    private final boolean isTank;
+    private final boolean isTank, type;
 
     public Card(final CardInput card) {
         mana = card.getMana();
@@ -27,6 +27,27 @@ public class Card {
         hasAttacked = false;
         type = setType();
         isTank = setIsTank();
+    }
+
+    /** */
+    public static Card newCard(final CardInput cardInput) {
+        switch (cardInput.getName()) {
+            case "Disciple" -> {
+                return new Disciple(cardInput);
+            }
+            case "Miraj" -> {
+                return new Miraj(cardInput);
+            }
+            case "The Cursed One" -> {
+                return new TheCursedOne(cardInput);
+            }
+            case "The Ripper" -> {
+                return new TheRipper(cardInput);
+            }
+            default -> {
+                return new Card(cardInput);
+            }
+        }
     }
 
     public final int getMana() {
@@ -98,14 +119,21 @@ public class Card {
 
     /** */
     private boolean setIsTank() {
-        return (Objects.equals(name, "Goliath") || Objects.equals(name, "Warden"));
+        final String[] tankMinions = {"Goliath", "Warden"};
+        return Arrays.asList(tankMinions).contains(name);
+    }
+
+    /** */
+    private boolean setType() {
+        final String[] backRowMinions = {"Sentinel", "Berserker", "The Cursed One", "Disciple"};
+        return Arrays.asList(backRowMinions).contains(name);
     }
 
     public final boolean getIsTank() {
         return isTank;
     }
 
-    public final int getType() {
+    public final boolean getType() {
         return type;
     }
 
@@ -121,16 +149,6 @@ public class Card {
         int aux = health;
         health = attackDamage;
         attackDamage = aux;
-    }
-
-    /** */
-    private int setType() {
-        final String[] backRowMinions = {"Sentinel", "Berserker", "The Cursed One", "Disciple"};
-        if (Arrays.asList(backRowMinions).contains(name)) {
-            return 0;
-        } else {
-            return 1;
-        }
     }
 
     /** */
@@ -151,7 +169,7 @@ public class Card {
     }
 
     /** */
-    public final int action(final Card attacked, final boolean samePlayer,
+    public final int useAbility(final Card attacked, final boolean samePlayer,
                             final boolean opponentHasTanks) {
         if (frozen) {
             return Constants.CARD_FROZEN;
@@ -159,29 +177,17 @@ public class Card {
         if (hasAttacked) {
             return Constants.CARD_HAS_ATTACKED;
         }
-        if (Objects.equals(name, "Disciple")) {
-            if (!samePlayer) {
-                return Constants.CARD_NOT_PLAYER;
-            }
-            attacked.addHealth(2);
-            return 0;
-        }
-        if (samePlayer) {
-            return Constants.CARD_NOT_OPPONENT;
-        }
 
-        if (opponentHasTanks && !attacked.getIsTank()) {
-            return Constants.NOT_TANK;
+        int errorCode = ability(attacked, samePlayer, opponentHasTanks);
+        if (errorCode == 0) {
+            hasAttacked = true;
         }
+        return errorCode;
+    }
 
-        switch (name) {
-            case "The Ripper" -> attacked.subtractAttackDamage(2);
-            case "Miraj" -> swapHealth(attacked);
-            case "The Cursed One" -> attacked.swapHealthAndAttackDamage();
-            default -> System.out.println("Card does not have an action");
-        }
-
-        hasAttacked = true;
+    /** */
+    public int ability(final Card attacked, final boolean samePlayer,
+                       final boolean opponentHasTanks) {
         return 0;
     }
 

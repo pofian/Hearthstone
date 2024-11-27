@@ -1,15 +1,16 @@
 package main;
 
-import fileio.ActionsInput;
-import fileio.CardInput;
 import fileio.Input;
-import fileio.GameInput;
+import fileio.StartGameInput;
+import fileio.CardInput;
+import fileio.ActionsInput;
 
 import java.util.ArrayList;
 import utils.Player;
-import utils.Card;
-import utils.Hero;
+import utils.cards.Card;
+import utils.heros.Hero;
 import utils.Constants;
+
 import static java.lang.Math.min;
 
 public final class Game {
@@ -19,34 +20,31 @@ public final class Game {
     private final int startingPlayer;
     private int playerWhoHasTurn, currentRound;
 
-    public Game(final Input inputData, final GameInput gameInput, final Statistics statistics) {
-        this.statistics = statistics;
-        ArrayList<CardInput> deckPlayerOne = inputData.getPlayerOneDecks().
-                getDecks().get(gameInput.getStartGame().getPlayerOneDeckIdx());
-        ArrayList<CardInput> deckPlayerTwo = inputData.getPlayerTwoDecks().
-                getDecks().get(gameInput.getStartGame().getPlayerTwoDeckIdx());
-
+    public Game(final Input inputData, final StartGameInput startGameInput) {
+        this.statistics = Statistics.getInstance();
         table = new ArrayList<>(Constants.ROW_COUNT);
         for (int i = 0; i < Constants.ROW_COUNT; i++) {
             table.add(new ArrayList<>());
         }
 
-        int seed = gameInput.getStartGame().getShuffleSeed();
+        ArrayList<CardInput> deckPlayerOne = inputData.getPlayerOneDecks().
+                getDecks().get(startGameInput.getPlayerOneDeckIdx());
+        ArrayList<CardInput> deckPlayerTwo = inputData.getPlayerTwoDecks().
+                getDecks().get(startGameInput.getPlayerTwoDeckIdx());
+        int seed = startGameInput.getShuffleSeed();
         players = new ArrayList<>(2);
-        players.add(new Player(deckPlayerOne, new Hero(gameInput.getStartGame().getPlayerOneHero()),
+        players.add(new Player(deckPlayerOne, Hero.newHero(startGameInput.getPlayerOneHero()),
                 Constants.PLAYER_ONE_FRONT_ROW, Constants.PLAYER_ONE_BACK_ROW, table, seed));
-        players.add(new Player(deckPlayerTwo, new Hero(gameInput.getStartGame().getPlayerTwoHero()),
+        players.add(new Player(deckPlayerTwo, Hero.newHero(startGameInput.getPlayerTwoHero()),
                 Constants.PLAYER_TWO_FRONT_ROW, Constants.PLAYER_TWO_BACK_ROW, table, seed));
 
-        startingPlayer = gameInput.getStartGame().getStartingPlayer() - 1;
-        currentRound = 0;
+        startingPlayer = startGameInput.getStartingPlayer() - 1;
+        playerWhoHasTurn = startingPlayer;
         newRound();
     }
 
-    /**
-     *
-     */
-    public void runGame(final ActionsInput action) {
+    /** */
+    public void runAction(final ActionsInput action) {
         switch (action.getCommand()) {
             case "getTotalGamesPlayed" -> statistics.getTotalGamesPlayed();
             case "getPlayerOneWins" -> statistics.getPlayerOneWins();
@@ -75,15 +73,13 @@ public final class Game {
 
             case "endPlayerTurn" -> {
                 Player player = players.get(playerWhoHasTurn);
-                for (Card card : table.get(player.getBackRowIdx())) {
-                    card.setFrozen(false);
-                    card.setHasAttacked(false);
+                for (int row : player.getRows()) {
+                    for (Card card : table.get(row)) {
+                        card.setFrozen(false);
+                        card.setHasAttacked(false);
+                    }
                 }
-                for (Card card : table.get(player.getFrontRowIdx())) {
-                    card.setFrozen(false);
-                    card.setHasAttacked(false);
-                }
-                playerWhoHasTurn = (playerWhoHasTurn + 1) % 2;
+                playerWhoHasTurn = 1 - playerWhoHasTurn;
                 if (playerWhoHasTurn == startingPlayer) {
                     newRound();
                 }
@@ -117,7 +113,7 @@ public final class Game {
                         get(action.getCardAttacker().getY());
                 Card attacked = table.get(action.getCardAttacked().getX()).
                         get(action.getCardAttacked().getY());
-                errorCode = attacker.action(attacked,
+                errorCode = attacker.useAbility(attacked,
                         action.getCardAttacker().getX() / 2 == action.getCardAttacked().getX() / 2,
                         players.get(1 - playerWhoHasTurn).hasPlacedTanks());
                 if (errorCode == 0 && attacked.getHealth() <= 0) {
@@ -133,7 +129,6 @@ public final class Game {
                         get(action.getCardAttacker().getY());
                 Player opponent = players.get(1 - playerWhoHasTurn);
                 errorCode = attacker.attackHero(opponent.getHero(), opponent.hasPlacedTanks());
-
                 statistics.useAttackHero(action.getCardAttacker(), errorCode);
                 if (players.get(1 - playerWhoHasTurn).getHero().getHealth() <= 0) {
                     statistics.gameEnded(playerWhoHasTurn);
@@ -150,11 +145,11 @@ public final class Game {
 
     private void newRound() {
         currentRound++;
-        playerWhoHasTurn = startingPlayer;
         for (Player player : players) {
             player.addMana(min(currentRound, Constants.MAX_MANA_INCREMENT));
             player.drawCard();
             player.getHero().setHasAttacked(false);
         }
     }
+
 }

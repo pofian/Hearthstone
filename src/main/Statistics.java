@@ -7,20 +7,31 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.util.ArrayList;
 
 import fileio.Coordinates;
-import utils.Card;
+import utils.cards.Card;
 import utils.Constants;
-import utils.Hero;
+import utils.heros.Hero;
 import utils.Player;
 
 public final class Statistics {
     private int totalGamesPlayed;
-    private final int[] playerWins;
-    private final ArrayNode output;
+    private final int[] playerWins = new int[2];
+    private ArrayNode output;
+    private static final Statistics INSTANCE = new Statistics();
+
+    private Statistics() {
+
+    }
+
+    public static Statistics getInstance() {
+        return INSTANCE;
+    }
 
     /** */
-    public Statistics(final ArrayNode output) {
-        this.output = output;
-        playerWins = new int[2];
+    public void setOutputAndReset(final ArrayNode newOutput) {
+        this.output = newOutput;
+        totalGamesPlayed = 0;
+        playerWins[0] = 0;
+        playerWins[1] = 0;
     }
 
     /** */

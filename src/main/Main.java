@@ -71,13 +71,12 @@ public final class Main {
                 Input.class);
 
         ArrayNode output = objectMapper.createArrayNode();
-
-        Statistics statistics = new Statistics(output);
+        Statistics.getInstance().setOutputAndReset(output);
         for (GameInput gameInput : inputData.getGames()) {
-            statistics.increaseTotalGamesPlayed();
-            Game game = new Game(inputData, gameInput, statistics);
+            Statistics.getInstance().increaseTotalGamesPlayed();
+            Game game = new Game(inputData, gameInput.getStartGame());
             for (ActionsInput action : gameInput.getActions()) {
-                game.runGame(action);
+                game.runAction(action);
             }
         }
 
